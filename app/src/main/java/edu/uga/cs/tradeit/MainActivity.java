@@ -1,24 +1,44 @@
 package edu.uga.cs.tradeit;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements UserSignInDialogFragment.SignInDialogListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+
+        //Temp
+
+        //startActivity(new Intent(this, ManagementActivity.class)
+        //       .putExtra("DEMO", true));
+        //finish();
+
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+        Button btnSignIn = findViewById(R.id.signIn);
+        Button btnRegister = findViewById(R.id.register);
+
+        btnSignIn.setOnClickListener(v ->
+                new UserSignInDialogFragment()
+                        .show(getSupportFragmentManager(), "SignIn"));
+
+        btnRegister.setOnClickListener(v ->
+                startActivity(new Intent(this, RegisterActivity.class)));
+    }
+
+    @Override
+    public void signIn(String email, String password) {
+        // Do Firebase sign-in here; on success:
+        startActivity(new Intent(this, ManagementActivity.class));
+        finish();
     }
 }

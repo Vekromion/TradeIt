@@ -83,7 +83,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
             holder.line2.setText(item.isFree ? "FREE" :
                     String.format(Locale.US, "$%.2f", item.price / 100.0));
             holder.line3.setText(item.description);
-            holder.line4.setText(DateFormat.getDateTimeInstance().format(new Date(item.postedAt)));
+            String user = (item.postedBy != null ? item.postedBy : "unknown");
+            holder.line4.setText("Posted by " + user + " on " + DateFormat.getDateTimeInstance().format(new Date(item.postedAt)));
             holder.itemView.setOnLongClickListener(v -> {
                 OR.onItemLong(item);
                 return true;

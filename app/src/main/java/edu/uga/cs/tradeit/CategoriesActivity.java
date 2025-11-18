@@ -99,6 +99,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
                     it.isFree = false;
                     it.price = 999;                  // $9.99
                     it.postedAt = System.currentTimeMillis();
+                    it.postedBy = "demo@uga.edu";
 
                     fakeItems.add(it);
                 }

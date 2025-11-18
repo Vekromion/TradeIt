@@ -14,6 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TradeIt">
         <activity
+            android:name=".RecyclerAdapter"
+            android:exported="false" />
+        <activity
             android:name=".TransactionsActivity"
             android:exported="false" />
         <activity

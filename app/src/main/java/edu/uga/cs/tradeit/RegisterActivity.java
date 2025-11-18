@@ -24,11 +24,13 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 
 public class RegisterActivity extends AppCompatActivity {
 
     private TextView textView;
     private EditText emailView;
+    private EditText usernameView;
     private EditText passwordView;
     private Button registerButton;
 
@@ -46,6 +48,7 @@ public class RegisterActivity extends AppCompatActivity {
             return insets;
         });
         emailView = findViewById(R.id.editTextText2);
+        usernameView = findViewById(R.id.editTextText3);
         passwordView = findViewById(R.id.editTextTextPassword2);
         registerButton = findViewById(R.id.button2);
         textView = findViewById(R.id.textView2);
@@ -59,8 +62,13 @@ public class RegisterActivity extends AppCompatActivity {
         public void onClick(View view) {
             final String email = emailView.getText().toString().trim();
             final String password = passwordView.getText().toString();
+            final String displayName = usernameView.getText().toString().trim();
 
             boolean ok = true;
+            if (TextUtils.isEmpty(displayName)) {
+                usernameView.setError("Display name required");
+                ok = false;
+            }
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 emailView.setError("Enter a valid email");
                 ok = false;
@@ -72,7 +80,6 @@ public class RegisterActivity extends AppCompatActivity {
             if (!ok) {
                 return;
             }
-            setBusy(true);
 
             firebaseAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(RegisterActivity.this, (Task<AuthResult> task) -> {
@@ -81,6 +88,11 @@ public class RegisterActivity extends AppCompatActivity {
                             FirebaseUser user = firebaseAuth.getCurrentUser();
                             Toast.makeText(getApplicationContext(),
                                     "Registered user: " + email, Toast.LENGTH_SHORT).show();
+                            // Sets Display Name
+                            if (user != null) {
+                                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder().setDisplayName(displayName).build();
+                                user.updateProfile(profileUpdates);
+                            }
                             startActivity(new Intent(RegisterActivity.this, ManagementActivity.class));
                             finish();
                         } else {
@@ -98,13 +110,6 @@ public class RegisterActivity extends AppCompatActivity {
                             Toast.makeText(getApplicationContext(), "Registration failed: ", Toast.LENGTH_LONG).show();
                         }
                     });
-        }
-
-        private void setBusy(boolean b) {
-            registerButton.setEnabled(!b);
-            registerButton.setText(b ? "Registering…" : "Register");
-            emailView.setEnabled(!b);
-            passwordView.setEnabled(!b);
         }
     }
 }

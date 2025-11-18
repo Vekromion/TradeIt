@@ -45,7 +45,7 @@ public class ManagementActivity extends AppCompatActivity {
 
         authListener = a -> {
             FirebaseUser u = a.getCurrentUser();
-            textView.setText("User: " + (u != null ? u.getEmail() : "not signed in"));
+            textView.setText("User: " + (u != null ? u.getDisplayName() : "not signed in"));
             if (u == null) {
                 // if not signed in, show the dialog right here
                 new UserSignInDialogFragment().show(getSupportFragmentManager(), "SignIn");

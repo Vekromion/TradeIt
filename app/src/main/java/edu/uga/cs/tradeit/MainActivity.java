@@ -16,12 +16,6 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Temp
-
-        //startActivity(new Intent(this, ManagementActivity.class)
-        //       .putExtra("DEMO", true));
-        //finish();
-
         setContentView(R.layout.activity_main);
 
         Button btnSignIn = findViewById(R.id.signIn);

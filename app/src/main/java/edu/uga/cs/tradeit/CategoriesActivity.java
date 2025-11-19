@@ -2,12 +2,15 @@ package edu.uga.cs.tradeit;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -15,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -53,6 +57,15 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // Toolbar
+        Toolbar toolbar = findViewById( R.id.toolbar2 );
+        setSupportActionBar( toolbar );
+
+        // Back and Home on Toolbar
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
         rcView = findViewById(R.id.rcView);
         rcView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -207,4 +220,27 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
     private void toast(String m){ Toast.makeText(this, m, Toast.LENGTH_LONG).show(); }
 
+
+    // Runs when options menu is created
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main_overflow, menu);
+        return true;
+    }
+
+    // Runs when logout in options is selected
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        // Sign out
+        if (item.getItemId()==R.id.action_logout) {
+            FirebaseAuth.getInstance().signOut();
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        }
+        // Home
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

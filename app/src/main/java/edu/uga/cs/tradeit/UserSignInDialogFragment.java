@@ -1,10 +1,7 @@
 package edu.uga.cs.tradeit;
 
 import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.PatternMatcher;
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.view.LayoutInflater;
@@ -37,7 +34,6 @@ public class UserSignInDialogFragment extends DialogFragment {
                 .setTitle("Sign In")
                 .setView(v1)
                 .setNegativeButton(android.R.string.cancel, (d, w) -> d.dismiss())
-                // We'll override OK’s click so it won't auto-dismiss on invalid input
                 .setPositiveButton(android.R.string.ok, null)
                 .create();
         dialog.setOnShowListener(d -> {
@@ -70,7 +66,11 @@ public class UserSignInDialogFragment extends DialogFragment {
                             dismiss();
                         })
                         .addOnFailureListener(e -> {
-                            passwordView.setError("Incorrect email or password");
+                            if (e instanceof com.google.firebase.FirebaseNetworkException) {
+                                passwordView.setError("Network error. Check your internet connection and try again.");
+                            } else {
+                                passwordView.setError("Sign-in failed: " + e.getMessage());
+                            }
                             passwordView.requestFocus();
                             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
                         });

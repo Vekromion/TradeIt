@@ -16,7 +16,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.firebase.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -35,9 +34,8 @@ public class ManagementActivity extends AppCompatActivity {
             return insets;
         });
 
-        Toolbar toolbar = findViewById( R.id.toolbar );
-
-        // using toolbar as ActionBar
+        // Toolbar
+        Toolbar toolbar = findViewById( R.id.toolbar2);
         setSupportActionBar( toolbar );
 
         textView = findViewById(R.id.textView3);
@@ -47,7 +45,6 @@ public class ManagementActivity extends AppCompatActivity {
             FirebaseUser u = a.getCurrentUser();
             textView.setText("User: " + (u != null ? u.getDisplayName() : "not signed in"));
             if (u == null) {
-                // if not signed in, show the dialog right here
                 new UserSignInDialogFragment().show(getSupportFragmentManager(), "SignIn");
             }
         };
@@ -69,32 +66,37 @@ public class ManagementActivity extends AppCompatActivity {
         });
     }
 
+    // On Start
     @Override
     protected void onStart() {
         super.onStart();
         auth.addAuthStateListener(authListener);
     }
 
+    // On Stop
     @Override
     protected void onStop() {
         super.onStop();
         if (authListener != null) auth.removeAuthStateListener(authListener);
     }
 
+    // Runs when options menu is created
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main_overflow, menu);
         return true;
     }
 
+    // Runs when logout in options is selected
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        // Sign out
         if (item.getItemId()==R.id.action_logout) {
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(this, MainActivity.class));
             finish();
-            return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

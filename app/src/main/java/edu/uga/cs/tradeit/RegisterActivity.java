@@ -97,17 +97,8 @@ public class RegisterActivity extends AppCompatActivity {
                             finish();
                         } else {
                             Log.w("Register", "createUserWithEmail: failure", task.getException());
-                            Exception e = task.getException();
-                            if (e instanceof FirebaseAuthUserCollisionException) {
-                                emailView.setError("Email already in use");
-                                Toast.makeText(getApplicationContext(), "Email already registered", Toast.LENGTH_LONG).show();
-                                return;
-                            }
-                            if (e instanceof FirebaseNetworkException) {
-                                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_LONG).show();
-                                return;
-                            }
-                            Toast.makeText(getApplicationContext(), "Registration failed: ", Toast.LENGTH_LONG).show();
+                            Toast.makeText(RegisterActivity.this, "Registration failed.",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     });
         }

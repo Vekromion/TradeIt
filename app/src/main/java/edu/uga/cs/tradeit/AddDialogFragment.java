@@ -1,64 +1,151 @@
 package edu.uga.cs.tradeit;
 
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.EditText;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link AddDialogFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class AddDialogFragment extends Fragment {
+// A DialogFragment class to handle Category and Item additions from the Cateogries activity
+// It uses a DialogFragment to allow the input of a new category or item.
+public class AddDialogFragment extends DialogFragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    public interface onNewCategory {
+        void create(String name);
+    }
+    public interface onNewItem {
+        void create(String name, String description, boolean isFree, Integer price);
+    }
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private onNewCategory newCat;
+    private onNewItem newItem;
+    private boolean categoryMode = false;
+    EditText name;
+    EditText description;
+    EditText price;
+    CheckBox free;
 
-    public AddDialogFragment() {
+    public AddDialogFragment () {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment AddDialogFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static AddDialogFragment newInstance(String param1, String param2) {
-        AddDialogFragment fragment = new AddDialogFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    public static AddDialogFragment newCategory(onNewCategory newCat) {
+        AddDialogFragment frag = new AddDialogFragment();
+        frag.categoryMode = true;
+        frag.newCat = newCat;
+        return frag;
+    }
+    public static AddDialogFragment newItem(onNewItem newItem) {
+        AddDialogFragment frag = new AddDialogFragment();
+        frag.categoryMode = false;
+        frag.newItem = newItem;
+        return frag;
     }
 
+    @NonNull
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        // Create the AlertDialog view
+        LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final View layout = inflater.inflate(R.layout.fragment_add_dialog,
+                getActivity().findViewById(R.id.root));
+
+        // get the view objects in the AlertDialog
+        name = layout.findViewById(R.id.editTextText4);
+        description = layout.findViewById(R.id.editTextTextMultiLine);
+        price = layout.findViewById(R.id.editTextNumberDecimal);
+        free = layout.findViewById(R.id.checkBox);
+
+        // Changes visibility of description depending on if category or items are shown
+        if (categoryMode) {
+            description.setVisibility(View.GONE);
+            price.setVisibility(View.GONE);
+            free.setVisibility(View.GONE);
+        } else {
+            description.setVisibility(View.VISIBLE);
+            price.setVisibility(View.VISIBLE);
+            free.setVisibility(View.VISIBLE);
         }
+
+        if (free != null) {
+            free.setOnCheckedChangeListener((button, checked) -> {
+                price.setEnabled(!checked);
+
+                if (checked) {
+                    price.setText(null);
+                }
+            });
+        }
+
+        // create a new AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext(), R.style.AlertDialogStyle);
+        // Set its view (inflated above).
+        builder.setView(layout);
+
+        // Set the title of the AlertDialog
+        builder.setTitle(categoryMode ? "New Category" : "New Item");
+        // Provide the negative button listener
+        builder.setNegativeButton( "Cancel", null );
+        // Provide the positive button listener
+        builder.setPositiveButton("Save", new SaveListener());
+
+        // Create the AlertDialog and show it
+        AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(d -> {
+            int accent = androidx.core.content.ContextCompat.getColor(
+                    requireContext(),
+                    R.color.teal_700
+            );
+
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(accent);
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(accent);
+        });
+        return dialog;
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_add_dialog, container, false);
+    private class SaveListener implements DialogInterface.OnClickListener {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            String nameStr = name.getText().toString();
+            String descStr = description.getText().toString();
+            if (TextUtils.isEmpty(nameStr)) {
+                name.setError("Name required");
+                return;
+            }
+            // If category is being added
+            if (categoryMode) {
+                if (newCat != null) {
+                    newCat.create(nameStr);
+                }
+            } else {
+                // If an item is being added
+                boolean isFree = free.isChecked();
+                Integer priceItem = null;
+
+                if (!isFree) {
+                    String pr = price.getText().toString().trim();
+                    if (TextUtils.isEmpty(pr)) {
+                        isFree = true;
+                        priceItem = 0;
+                    }
+                }
+
+                if (newItem != null) {
+                    newItem.create(nameStr, descStr, isFree, priceItem);
+                }
+            }
+            dismiss();
+        }
     }
 }

@@ -170,7 +170,12 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
     // Adding, Editing, Deleting Categories
     // Shows the Add Categories dialog
     private void showAddCategory() {
-
+        AddDialogFragment.newCategory(name -> {
+            Category c = new Category();
+            c.name = name;
+            c.itemCount = 0;
+            addCategory(c);
+        }).show(getSupportFragmentManager(), "addCat");
     }
     private void addCategory(Category c) {
 
@@ -185,6 +190,23 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
     // Adding, Editing, Deleting Items
     // Shows the Add Item dialog
     private void showAddItem() {
+        AddDialogFragment.newItem((itemName, desc, isFree, price) -> {
+            Item item = new Item();
+            item.name = itemName;
+            item.description = desc;
+            item.isFree = isFree;
+            item.price = (price != null ? price : 0);
+            item.categoryId = categoryId;
+            item.postedAt = System.currentTimeMillis();
+            if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+                item.postedBy = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+            } else {
+                item.postedBy = "unknown";
+            }
+            addItem(item);
+        }).show(getSupportFragmentManager(), "addItem");
+    }
+    private void addItem(Item item) {
 
     }
     private void editItem(Item item) {

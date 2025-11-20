@@ -37,7 +37,7 @@ public class UserSignInDialogFragment extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, null)
                 .create();
         dialog.setOnShowListener(d -> {
-            int accent = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.teal_700); // pick any visible color
+            int accent = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.teal_700);
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(accent);
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(accent);
 

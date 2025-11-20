@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void signIn(String email, String password) {
-        // Do Firebase sign-in here; on success:
         startActivity(new Intent(this, ManagementActivity.class));
         finish();
     }

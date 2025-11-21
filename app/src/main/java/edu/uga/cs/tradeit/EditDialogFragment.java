@@ -8,46 +8,61 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
 
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-// A DialogFragment class to handle Category and Item additions from the Cateogries activity
-// It uses a DialogFragment to allow the input of a new category or item.
-public class AddDialogFragment extends DialogFragment {
+// This is a DialogFragment to handle edits to a Category or Item.
+// The edits are: updates and deletions of existing Categories or Items.
+public class EditDialogFragment extends DialogFragment {
 
-    public interface onNewCategory {
-        void create(String name);
-    }
-    public interface onNewItem {
-        void create(String name, String description, boolean isFree, Integer price);
+    public interface onEditCategory {
+        void save(String newName);
+        void delete();
     }
 
-    private onNewCategory newCat;
-    private onNewItem newItem;
+    public interface onEditItem {
+        void save(String name, String description, boolean isFree, Integer price);
+        void delete();
+    }
+
+    private EditDialogFragment.onEditCategory editCat;
+    private EditDialogFragment.onEditItem editItem;
     private boolean categoryMode = false;
     EditText name;
     EditText description;
     EditText price;
     CheckBox free;
+    private String newName;
+    private String newDesc;
+    private boolean newFree;
+    private Integer newPrice;
 
-    public AddDialogFragment () {
+    public EditDialogFragment() {
         // Required empty public constructor
     }
 
-    public static AddDialogFragment newCategory(onNewCategory newCat) {
-        AddDialogFragment frag = new AddDialogFragment();
+    public static EditDialogFragment newCategory(String name, EditDialogFragment.onEditCategory editCat) {
+        EditDialogFragment frag = new EditDialogFragment();
         frag.categoryMode = true;
-        frag.newCat = newCat;
+        frag.newName = name;
+        frag.editCat = editCat;
         return frag;
     }
-    public static AddDialogFragment newItem(onNewItem newItem) {
-        AddDialogFragment frag = new AddDialogFragment();
+
+    public static EditDialogFragment newItem(String name, String description, Boolean isFree, Integer price, EditDialogFragment.onEditItem editItem) {
+        EditDialogFragment frag = new EditDialogFragment();
         frag.categoryMode = false;
-        frag.newItem = newItem;
+        frag.newName = name;
+        frag.newDesc = description;
+        frag.newFree = isFree;
+        frag.newPrice = price;
+        frag.editItem = editItem;
         return frag;
     }
 
@@ -65,6 +80,8 @@ public class AddDialogFragment extends DialogFragment {
         price = layout.findViewById(R.id.editTextNumberDecimal);
         free = layout.findViewById(R.id.checkBox);
 
+        // Pre fill the fields
+        name.setText(newName);
         // Changes visibility of description depending on if category or items are shown
         if (categoryMode) {
             description.setVisibility(View.GONE);
@@ -74,6 +91,16 @@ public class AddDialogFragment extends DialogFragment {
             description.setVisibility(View.VISIBLE);
             price.setVisibility(View.VISIBLE);
             free.setVisibility(View.VISIBLE);
+
+            description.setText(newDesc);
+
+            free.setChecked(newFree);
+            if (newPrice != null && !newFree) {
+                price.setText(String.valueOf(newPrice));
+            } else {
+                price.setText(null);
+            }
+            price.setEnabled(!free.isChecked());
         }
 
         if (free != null) {
@@ -92,11 +119,19 @@ public class AddDialogFragment extends DialogFragment {
         builder.setView(layout);
 
         // Set the title of the AlertDialog
-        builder.setTitle(categoryMode ? "New Category" : "New Item");
+        builder.setTitle(categoryMode ? "Update Category" : "Update Item");
         // Provide the negative button listener
-        builder.setNegativeButton( "Cancel", null );
+        builder.setNegativeButton("Cancel", null);
         // Provide the positive button listener
-        builder.setPositiveButton("Save", new SaveListener());
+        builder.setPositiveButton("Save", new EditDialogFragment.SaveListener());
+        builder.setNeutralButton("Delete", (d, which) -> {
+            if (categoryMode) {
+                if (editCat != null) editCat.delete();
+            } else {
+                if (editItem != null) editItem.delete();
+            }
+            dismiss();
+        });
 
         // Create the AlertDialog and show it
         AlertDialog dialog = builder.create();
@@ -108,6 +143,7 @@ public class AddDialogFragment extends DialogFragment {
 
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(accent);
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(accent);
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(accent);
         });
         return dialog;
     }
@@ -121,13 +157,13 @@ public class AddDialogFragment extends DialogFragment {
                 name.setError("Name required");
                 return;
             }
-            // If category is being added
+            // If category is being updated
             if (categoryMode) {
-                if (newCat != null) {
-                    newCat.create(nameStr);
+                if (editCat != null) {
+                    editCat.save(nameStr);
                 }
             } else {
-                // If an item is being added
+                // If an item is being updated
                 boolean isFree = free.isChecked();
                 Integer priceItem = null;
 
@@ -138,9 +174,8 @@ public class AddDialogFragment extends DialogFragment {
                         priceItem = 0;
                     }
                 }
-
-                if (newItem != null) {
-                    newItem.create(nameStr, descStr, isFree, priceItem);
+                if (editItem != null) {
+                    editItem.save(nameStr, descStr, isFree, priceItem);
                 }
             }
             dismiss();

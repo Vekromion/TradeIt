@@ -93,12 +93,29 @@ public class RegisterActivity extends AppCompatActivity {
                                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder().setDisplayName(displayName).build();
                                 user.updateProfile(profileUpdates);
                             }
+
+                            Toast.makeText(getApplicationContext(), "Registered user: " + email, Toast.LENGTH_SHORT).show();
+
                             startActivity(new Intent(RegisterActivity.this, ManagementActivity.class));
                             finish();
                         } else {
                             Log.w("Register", "createUserWithEmail: failure", task.getException());
-                            Toast.makeText(RegisterActivity.this, "Registration failed.",
-                                    Toast.LENGTH_SHORT).show();
+                            Exception e = task.getException();
+                            // Error checkers for register use story
+                            if (e instanceof FirebaseAuthUserCollisionException) {
+                                emailView.setError("Email already in use");
+                                Toast.makeText(RegisterActivity.this,
+                                        "Email already in use",
+                                        Toast.LENGTH_LONG).show();
+                            } else if (e instanceof FirebaseNetworkException) {
+                                Toast.makeText(RegisterActivity.this,
+                                        "Network error. Please try again",
+                                        Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(RegisterActivity.this,
+                                        "Registration failed",
+                                        Toast.LENGTH_LONG).show();
+                            }
                         }
                     });
         }

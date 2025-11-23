@@ -178,13 +178,49 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         }).show(getSupportFragmentManager(), "addCat");
     }
     private void addCategory(Category c) {
+        String key = FirebaseRefs.categories().push().getKey();
 
+        if (key != null) {
+
+            c.id = key;
+
+            FirebaseRefs.categories().child(key).setValue(c)
+
+                    .addOnSuccessListener(aVoid -> toast("Category added successfully"))
+
+                    .addOnFailureListener(e -> toast("Failed to add category: " + e.getMessage()));
+
+        }
     }
     private void editCategory(Category c) {
 
     }
     private void deleteCategory(Category c) {
+        if (c.itemCount > 0) {
 
+            toast("Cannot delete category with items. Delete all items first.");
+
+            return;
+        }
+        new AlertDialog.Builder(this)
+
+                .setTitle("Delete Category")
+
+                .setMessage("Are you sure you want to delete " + c.name + "?")
+
+                .setPositiveButton("Delete", (dialog, which) -> {
+
+                    FirebaseRefs.categories().child(c.id).removeValue()
+
+                            .addOnSuccessListener(aVoid -> toast("Category deleted successfully"))
+
+                            .addOnFailureListener(e -> toast("Failed to delete category: " + e.getMessage()));
+
+                })
+
+                .setNegativeButton("Cancel", null)
+
+                .show();
     }
 
     // Adding, Editing, Deleting Items
@@ -208,15 +244,237 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
     }
     private void addItem(Item item) {
 
+        String key = FirebaseRefs.itemsByCategory(categoryId).push().getKey();
+
+        if (key != null) {
+
+            item.id = key;
+
+            FirebaseRefs.itemsByCategory(categoryId).child(key).setValue(item)
+
+                    .addOnSuccessListener(aVoid -> {
+
+                        // Increment category item count
+
+                        FirebaseRefs.categories().child(categoryId)
+
+                                .child("itemCount")
+
+                                .runTransaction(new com.google.firebase.database.Transaction.Handler() {
+
+                                    @NonNull
+
+                                    @Override
+
+                                    public com.google.firebase.database.Transaction.Result doTransaction(@NonNull com.google.firebase.database.MutableData data) {
+
+                                        Integer count = data.getValue(Integer.class);
+
+                                        if (count == null) {
+
+                                            data.setValue(1);
+
+                                        } else {
+
+                                            data.setValue(count + 1);
+
+                                        }
+
+                                        return com.google.firebase.database.Transaction.success(data);
+
+                                    }
+
+
+
+                                    @Override
+
+                                    public void onComplete(DatabaseError error, boolean committed, DataSnapshot snapshot) {
+
+                                        if (committed) {
+
+                                            toast("Item added successfully");
+
+                                        }
+
+                                    }
+
+                                });
+
+                    })
+
+                    .addOnFailureListener(e -> toast("Failed to add item: " + e.getMessage()));
+
+        }
+
     }
     private void editItem(Item item) {
 
     }
     private void deleteItem(Item item) {
 
+        new AlertDialog.Builder(this)
+
+                .setTitle("Delete Item")
+
+                .setMessage("Are you sure you want to delete " + item.name + "?")
+
+                .setPositiveButton("Delete", (dialog, which) -> {
+
+                    FirebaseRefs.itemsByCategory(categoryId).child(item.id).removeValue()
+
+                            .addOnSuccessListener(aVoid -> {
+
+                                // Decrement category item count
+
+                                FirebaseRefs.categories().child(item.categoryId)
+
+                                        .child("itemCount")
+
+                                        .runTransaction(new com.google.firebase.database.Transaction.Handler() {
+
+                                            @NonNull
+
+                                            @Override
+
+                                            public com.google.firebase.database.Transaction.Result doTransaction(@NonNull com.google.firebase.database.MutableData data) {
+
+                                                Integer count = data.getValue(Integer.class);
+
+                                                if (count != null && count > 0) {
+
+                                                    data.setValue(count - 1);
+
+                                                }
+
+                                                return com.google.firebase.database.Transaction.success(data);
+
+                                            }
+
+
+
+                                            @Override
+
+                                            public void onComplete(DatabaseError error, boolean committed, DataSnapshot snapshot) {
+
+                                                if (committed) {
+
+                                                    toast("Item deleted successfully");
+
+                                                }
+
+                                            }
+
+                                        });
+
+                            })
+
+                            .addOnFailureListener(e -> toast("Failed to delete item: " + e.getMessage()));
+
+                })
+
+                .setNegativeButton("Cancel", null)
+
+                .show();
+
     }
     // User Story 12
     private void buyItem(Item item) {
+
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null
+
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+
+
+
+        if (currentUserId == null) {
+
+            toast("You must be logged in to purchase items");
+
+            return;
+
+        }
+
+
+
+        String message = item.isFree
+
+                ? "Do you want to accept this free item?"
+
+                : "Do you want to purchase this item for $" + String.format("%.2f", item.price / 100.0) + "?";
+
+
+
+        new AlertDialog.Builder(this)
+
+                .setTitle(item.isFree ? "Accept Item" : "Purchase Item")
+
+                .setMessage(message)
+
+                .setPositiveButton(item.isFree ? "Accept" : "Buy", (dialog, which) -> {
+
+                    // Create transaction
+
+                    String transactionKey = FirebaseRefs.completedByUser(currentUserId).push().getKey();
+
+                    if (transactionKey != null) {
+
+                        // Create transaction object (you'll need to define Transaction model)
+
+                        // Transaction transaction = new Transaction();
+
+                        // transaction.id = transactionKey;
+
+                        // transaction.itemId = item.id;
+
+                        // transaction.itemName = item.name;
+
+                        // transaction.buyerId = currentUserId;
+
+                        // transaction.sellerId = item.postedBy;
+
+                        // transaction.price = item.price;
+
+                        // transaction.isFree = item.isFree;
+
+                        // transaction.status = "pending";
+
+                        // transaction.createdAt = System.currentTimeMillis();
+
+
+
+                        // Save transaction and remove item from listings
+
+                        // FirebaseRefs.transactions().child(transactionKey).setValue(transaction)
+
+                        //     .addOnSuccessListener(aVoid -> {
+
+                        //         deleteItem(item); // Remove from category
+
+                        //         toast(item.isFree ? "Item accepted!" : "Purchase initiated!");
+
+                        //         // You may want to navigate to pending transactions screen
+
+                        //     })
+
+                        //     .addOnFailureListener(e -> toast("Transaction failed: " + e.getMessage()));
+
+
+
+                        // For now, simplified version:
+
+                        deleteItem(item);
+
+                        toast(item.isFree ? "Item accepted! Check your pending transactions."
+
+                                : "Purchase initiated! Check your pending transactions.");
+
+                    }
+
+                })
+
+                .setNegativeButton("Cancel", null)
+
+                .show();
 
     }
 

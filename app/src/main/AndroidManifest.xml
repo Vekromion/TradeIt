@@ -18,10 +18,14 @@
             android:exported="false" />
         <activity
             android:name=".TransactionsActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ManagementActivity"/>
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="edu.uga.cs.tradeit.ManagementActivity" />
         <activity
             android:name=".CategoriesActivity"
-            android:exported="false" />
+            android:exported="false"/>
         <activity
             android:name=".ManagementActivity"
             android:exported="false"

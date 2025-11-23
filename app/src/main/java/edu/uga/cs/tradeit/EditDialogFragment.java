@@ -23,12 +23,10 @@ public class EditDialogFragment extends DialogFragment {
 
     public interface onEditCategory {
         void save(String newName);
-        void delete();
     }
 
     public interface onEditItem {
         void save(String name, String description, boolean isFree, Integer price);
-        void delete();
     }
 
     private EditDialogFragment.onEditCategory editCat;
@@ -47,7 +45,7 @@ public class EditDialogFragment extends DialogFragment {
         // Required empty public constructor
     }
 
-    public static EditDialogFragment newCategory(String name, EditDialogFragment.onEditCategory editCat) {
+    public static EditDialogFragment editCategory(String name, EditDialogFragment.onEditCategory editCat) {
         EditDialogFragment frag = new EditDialogFragment();
         frag.categoryMode = true;
         frag.newName = name;
@@ -55,7 +53,7 @@ public class EditDialogFragment extends DialogFragment {
         return frag;
     }
 
-    public static EditDialogFragment newItem(String name, String description, Boolean isFree, Integer price, EditDialogFragment.onEditItem editItem) {
+    public static EditDialogFragment editItem(String name, String description, Boolean isFree, Integer price, EditDialogFragment.onEditItem editItem) {
         EditDialogFragment frag = new EditDialogFragment();
         frag.categoryMode = false;
         frag.newName = name;
@@ -124,6 +122,7 @@ public class EditDialogFragment extends DialogFragment {
         builder.setNegativeButton("Cancel", null);
         // Provide the positive button listener
         builder.setPositiveButton("Save", new EditDialogFragment.SaveListener());
+        /**
         builder.setNeutralButton("Delete", (d, which) -> {
             if (categoryMode) {
                 if (editCat != null) editCat.delete();
@@ -131,7 +130,7 @@ public class EditDialogFragment extends DialogFragment {
                 if (editItem != null) editItem.delete();
             }
             dismiss();
-        });
+        });**/
 
         // Create the AlertDialog and show it
         AlertDialog dialog = builder.create();

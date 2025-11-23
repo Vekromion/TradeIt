@@ -20,7 +20,7 @@ public class FirebaseRefs {
     public static DatabaseReference itemsByOwner(String userId) {
         return db.getReference("itemsByOwner").child(userId);
     }
-    public static DatabaseReference itemsByUser(String userId) {
+    public static DatabaseReference pendingByUser(String userId) {
         return db.getReference("itemsByUser").child("pendingByUser").child(userId);
     }
     public static DatabaseReference completedByUser(String userId) {

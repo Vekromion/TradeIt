@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -25,7 +26,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import edu.uga.cs.tradeit.data.FirebaseRefs;
 import edu.uga.cs.tradeit.models.Category;
@@ -60,10 +63,10 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
         // Toolbar
         Toolbar toolbar = findViewById( R.id.toolbar2 );
-        setSupportActionBar( toolbar );
+        setSupportActionBar(toolbar);
 
         // Back and Home on Toolbar
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         rcView = findViewById(R.id.rcView);
@@ -106,11 +109,11 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
                 if ("testCat".equals(categoryId)) {
                     Item it = new Item();
                     it.id = "testItem1";
-                    it.categoryId = categoryId;     // "testCat"
+                    it.categoryId = categoryId;
                     it.name = "Test Item";
                     it.description = "This is a test item";
                     it.isFree = false;
-                    it.price = 999;                  // $9.99
+                    it.price = 999;
                     it.postedAt = System.currentTimeMillis();
                     it.postedBy = "demo@uga.edu";
 
@@ -193,7 +196,15 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         }
     }
     private void editCategory(Category c) {
-
+        if (c.itemCount > 0) {
+            toast("Category must be empty");
+            return;
+        }
+        EditDialogFragment.editCategory(c.name, (newName) -> {
+            String trim = newName == null ? "" : newName.trim();
+            FirebaseRefs.categories().child(c.id).child("name").setValue(trim);
+            c.name = trim;
+        }).show(getSupportFragmentManager(),"editCategory");
     }
     private void deleteCategory(Category c) {
         if (c.itemCount > 0) {
@@ -308,7 +319,16 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
     }
     private void editItem(Item item) {
-
+        EditDialogFragment.editItem(item.name, item.description, item.isFree, item.price, (name, description, isFree, price) -> {
+            HashMap<String,Object> updates = new HashMap<>();
+            updates.put("name", name);
+            updates.put("description", description);
+            updates.put("isFree", isFree);
+            updates.put("price", price);
+            updates.put("price", isFree ? null : price);
+            FirebaseRefs.itemsByCategory(item.categoryId).child(item.id).updateChildren(updates);
+            FirebaseRefs.itemsByOwner(item.postedBy).child(item.id).updateChildren(updates);
+        }).show(getSupportFragmentManager(),"editItem");
     }
     private void deleteItem(Item item) {
 
@@ -487,15 +507,28 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         startActivity(i);
     }
     public void onCategoryLong(Category c) {
-        String[] opts = {"Edit (only if empty)", "Delete (only if empty)"};
+        String[] opts = {"Edit (Can only be done if empty)", "Delete (Can only be done if empty)"};
         new AlertDialog.Builder(this).setTitle(c.name).setItems(opts,(d, w)->{
-            if (w==0) editCategory(c); else deleteCategory(c);
+            if (w==0) {
+                editCategory(c);
+            } else {
+                deleteCategory(c);
+            }
         }).show();
     }
 
     @Override
     public void onItemLong(Item item) {
-
+        String[] opts = {"Edit", "Delete", "Buy"};
+        new AlertDialog.Builder(this).setTitle(item.name).setItems(opts,(d, w)->{
+            if (w==0) {
+                editItem(item);
+            } else if (w==1) {
+                deleteItem(item);
+            } else {
+                buyItem(item);
+            }
+        }).show();
     }
 
     private void toast(String m){ Toast.makeText(this, m, Toast.LENGTH_LONG).show(); }

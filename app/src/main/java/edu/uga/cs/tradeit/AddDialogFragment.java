@@ -12,6 +12,7 @@ import androidx.fragment.app.DialogFragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
@@ -105,9 +106,19 @@ public class AddDialogFragment extends DialogFragment {
                     requireContext(),
                     R.color.teal_700
             );
+            final Button btnPositive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            final Button btnNegative = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
 
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(accent);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(accent);
+            if (btnPositive != null) {
+                btnPositive.setTextColor(accent);
+                btnPositive.setOnClickListener(v ->
+                        new SaveListener().onClick(dialog, AlertDialog.BUTTON_POSITIVE)
+                );
+            }
+            if (btnNegative != null) {
+                btnNegative.setTextColor(accent);
+            }
+
         });
         return dialog;
     }

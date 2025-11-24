@@ -38,7 +38,7 @@ import edu.uga.cs.tradeit.models.Transaction;
 
 public class TransactionsActivity extends AppCompatActivity {
     public RecyclerView rcView;
-    public TransactionsAdapter adapter;
+    //public TransactionsAdapter adapter;
     private ValueEventListener pListener, cListener;
     private final List<Transaction> pendingList = new ArrayList<>();
     private final List<Transaction> completedList = new ArrayList<>();
@@ -65,8 +65,8 @@ public class TransactionsActivity extends AppCompatActivity {
         rcView = findViewById(R.id.recyclerView);
         rcView.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new TransactionsAdapter();
-        rcView.setAdapter(adapter);
+        //adapter = new TransactionsAdapter();
+        //rcView.setAdapter(adapter);
 
         showingPending = true;
 
@@ -90,9 +90,9 @@ public class TransactionsActivity extends AppCompatActivity {
         });
     }
     @Override
-    protected void onStart() {
+    //protected void onStart() {
 
-    }
+    //}
 
     protected void onStop() {
         super.onStop();
@@ -105,8 +105,8 @@ public class TransactionsActivity extends AppCompatActivity {
         }
     }
 
-    class TransactionsAdapter extends RecyclerView.Adapter<TxVH> {
-    }
+    // class TransactionsAdapter extends RecyclerView.Adapter<TxVH> {
+    // }
 
     private void confirmComplete(Transaction t) {
 

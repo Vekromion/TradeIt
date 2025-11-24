@@ -42,7 +42,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
     public static final int MODE_CATEGORIES = 0;
     public static final int MODE_ITEMS = 1;
 
-    private static final boolean DEMO_MODE = true;
+    private static final boolean DEMO_MODE = false;
 
     private int mode;
     private String categoryId, categoryName;
@@ -140,8 +140,9 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
                             list.add(c);
                         }
                     }
-                    // Story 4a
-                    list.sort(Comparator.comparing(c -> c.name.toLowerCase()));
+                    list.sort(Comparator.comparing(c ->
+                            c.name == null ? "" : c.name.toLowerCase()
+                    ));
                     adapter.submitCategories(list);
                 }
                 public void onCancelled(@NonNull DatabaseError e) {}
@@ -507,7 +508,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         startActivity(i);
     }
     public void onCategoryLong(Category c) {
-        String[] opts = {"Edit (Can only be done if empty)", "Delete (Can only be done if empty)"};
+        String[] opts = {"Edit", "Delete "};
         new AlertDialog.Builder(this).setTitle(c.name).setItems(opts,(d, w)->{
             if (w==0) {
                 editCategory(c);

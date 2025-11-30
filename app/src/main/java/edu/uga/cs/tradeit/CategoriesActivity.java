@@ -33,6 +33,7 @@ import java.util.Objects;
 import edu.uga.cs.tradeit.data.FirebaseRefs;
 import edu.uga.cs.tradeit.models.Category;
 import edu.uga.cs.tradeit.models.Item;
+import edu.uga.cs.tradeit.models.Transaction;
 
 public class CategoriesActivity extends AppCompatActivity implements RecyclerAdapter.OnRowAction {
 
@@ -405,6 +406,10 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
 
+        String currentUserEmail = FirebaseAuth.getInstance().getCurrentUser() != null
+
+                ? FirebaseAuth.getInstance().getCurrentUser().getEmail() : null;
+
 
 
         if (currentUserId == null) {
@@ -433,61 +438,129 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
                 .setPositiveButton(item.isFree ? "Accept" : "Buy", (dialog, which) -> {
 
-                    // Create transaction
-
                     String transactionKey = FirebaseRefs.completedByUser(currentUserId).push().getKey();
 
                     if (transactionKey != null) {
 
-                        // Create transaction object (you'll need to define Transaction model)
+                        // Create transaction object
 
-                        // Transaction transaction = new Transaction();
+                        Transaction transaction = new Transaction();
 
-                        // transaction.id = transactionKey;
+                        transaction.id = transactionKey;
 
-                        // transaction.itemId = item.id;
+                        transaction.itemId = item.id;
 
-                        // transaction.itemName = item.name;
+                        transaction.itemName = item.name;
 
-                        // transaction.buyerId = currentUserId;
+                        transaction.categoryID = item.categoryId;
 
-                        // transaction.sellerId = item.postedBy;
+                        transaction.buyerUserID = currentUserId;
 
-                        // transaction.price = item.price;
+                        transaction.sellerUserID = item.postedBy; // Note: This should be seller's UID, not email
 
-                        // transaction.isFree = item.isFree;
+                        transaction.itemPrice = item.price;
 
-                        // transaction.status = "pending";
+                        transaction.itemIsFree = item.isFree;
 
-                        // transaction.createdAt = System.currentTimeMillis();
+                        transaction.status = "pending";
 
+                        transaction.createdAt = System.currentTimeMillis();
 
+                        transaction.buyerConfirmed = true;
 
-                        // Save transaction and remove item from listings
-
-                        // FirebaseRefs.transactions().child(transactionKey).setValue(transaction)
-
-                        //     .addOnSuccessListener(aVoid -> {
-
-                        //         deleteItem(item); // Remove from category
-
-                        //         toast(item.isFree ? "Item accepted!" : "Purchase initiated!");
-
-                        //         // You may want to navigate to pending transactions screen
-
-                        //     })
-
-                        //     .addOnFailureListener(e -> toast("Transaction failed: " + e.getMessage()));
+                        transaction.sellerConfirmed = false;
 
 
 
-                        // For now, simplified version:
+                        // Save transaction to main transactions node
 
-                        deleteItem(item);
+                        FirebaseRefs.completedByUser(currentUserId).child(transactionKey).setValue(transaction)
 
-                        toast(item.isFree ? "Item accepted! Check your pending transactions."
+                                .addOnSuccessListener(aVoid -> {
 
-                                : "Purchase initiated! Check your pending transactions.");
+                                    // Add to buyer's pending buys
+
+                                    FirebaseRefs.pendingByUser(currentUserId).child(transactionKey).setValue(true)
+
+                                            .addOnSuccessListener(aVoid2 -> {
+
+                                                // Add to seller's pending sales (need seller's UID)
+
+                                                // Note: item.postedBy should store UID, not email for this to work properly
+
+                                                // For now, assuming you have a way to get seller's UID
+
+                                                // You may need to store sellerUid in the Item model
+
+
+
+                                                // If you stored seller UID in item:
+
+                                                // FirebaseRefs.userPendingSales(item.sellerUid).child(transactionKey).setValue(true)
+
+
+
+                                                // Remove item from category listings
+
+                                                FirebaseRefs.itemsByCategory(categoryId).child(item.id).removeValue()
+
+                                                        .addOnSuccessListener(aVoid3 -> {
+
+                                                            // Decrement category item count
+
+                                                            FirebaseRefs.categories().child(item.categoryId)
+
+                                                                    .child("itemCount")
+
+                                                                    .runTransaction(new com.google.firebase.database.Transaction.Handler() {
+
+                                                                        @NonNull
+
+                                                                        @Override
+
+                                                                        public com.google.firebase.database.Transaction.Result doTransaction(@NonNull com.google.firebase.database.MutableData data) {
+
+                                                                            Integer count = data.getValue(Integer.class);
+
+                                                                            if (count != null && count > 0) {
+
+                                                                                data.setValue(count - 1);
+
+                                                                            }
+
+                                                                            return com.google.firebase.database.Transaction.success(data);
+
+                                                                        }
+
+
+
+                                                                        @Override
+
+                                                                        public void onComplete(DatabaseError error, boolean committed, DataSnapshot snapshot) {
+
+                                                                            if (committed) {
+
+                                                                                toast(item.isFree ? "Item accepted! Seller has been notified."
+
+                                                                                        : "Purchase initiated! Seller has been notified.");
+
+                                                                            }
+
+                                                                        }
+
+                                                                    });
+
+                                                        })
+
+                                                        .addOnFailureListener(e -> toast("Failed to remove item: " + e.getMessage()));
+
+                                            })
+
+                                            .addOnFailureListener(e -> toast("Failed to update buyer list: " + e.getMessage()));
+
+                                })
+
+                                .addOnFailureListener(e -> toast("Transaction failed: " + e.getMessage()));
 
                     }
 

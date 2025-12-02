@@ -11,6 +11,7 @@ public class FirebaseRefs {
     public static DatabaseReference users() {
         return db.getReference("users");
     }
+
     public static DatabaseReference categories() {
         return db.getReference("categories");
     }
@@ -21,7 +22,7 @@ public class FirebaseRefs {
         return db.getReference("itemsByOwner").child(userId);
     }
     public static DatabaseReference pendingByUser(String userId) {
-        return db.getReference("itemsByUser").child("pendingByUser").child(userId);
+        return db.getReference("transactions").child("pendingByUser").child(userId);
     }
     public static DatabaseReference completedByUser(String userId) {
         return db.getReference("transactions").child("completedByUser").child(userId);

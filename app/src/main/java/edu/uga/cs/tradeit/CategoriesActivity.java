@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -80,6 +81,9 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         setTitle(mode == MODE_CATEGORIES ? "Categories" : ("Items in " + categoryName));
 
         adapter = new RecyclerAdapter(this, mode);
+        if (mode == MODE_ITEMS) {
+            adapter.setCurrentCategoryName(categoryName);
+        }
         rcView.setAdapter(adapter);
 
         FloatingActionButton fab = findViewById(R.id.floatingActionButton);
@@ -177,8 +181,11 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
     private void showAddCategory() {
         AddDialogFragment.newCategory(name -> {
             Category c = new Category();
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             c.name = name;
             c.itemCount = 0;
+            c.createdAt = System.currentTimeMillis();
+            c.userid = user.getUid();
             addCategory(c);
         }).show(getSupportFragmentManager(), "addCat");
     }
@@ -206,6 +213,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
             String trim = newName == null ? "" : newName.trim();
             FirebaseRefs.categories().child(c.id).child("name").setValue(trim);
             c.name = trim;
+            c.updatedAt = System.currentTimeMillis();
         }).show(getSupportFragmentManager(),"editCategory");
     }
     private void deleteCategory(Category c) {
@@ -247,10 +255,18 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
             item.price = (price != null ? price : 0);
             item.categoryId = categoryId;
             item.postedAt = System.currentTimeMillis();
-            if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-                item.postedBy = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                item.postedByUID = user.getUid();
+                String display = user.getDisplayName();
+                if (display != null && !display.trim().isEmpty()) {
+                    item.postedBy = display;
+                } else {
+                    item.postedBy = user.getEmail();
+                }
             } else {
-                item.postedBy = "unknown";
+                item.postedByUID = null;
+                item.postedBy = "Unknown";
             }
             addItem(item);
         }).show(getSupportFragmentManager(), "addItem");
@@ -409,6 +425,9 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         String currentUserEmail = FirebaseAuth.getInstance().getCurrentUser() != null
 
                 ? FirebaseAuth.getInstance().getCurrentUser().getEmail() : null;
+        String currentUserName = FirebaseAuth.getInstance().getCurrentUser() != null
+
+                ? FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : null;
 
 
 
@@ -418,6 +437,11 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
             return;
 
+        }
+
+        if (item.postedByUID == null) {
+            toast("Seller UID missing");
+            return;
         }
 
 
@@ -455,8 +479,11 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
                         transaction.categoryID = item.categoryId;
 
                         transaction.buyerUserID = currentUserId;
+                        transaction.buyerName = currentUserName;
 
-                        transaction.sellerUserID = item.postedBy; // Note: This should be seller's UID, not email
+                        transaction.sellerUserID = item.postedByUID;
+
+                        transaction.sellerName = item.postedBy;
 
                         transaction.itemPrice = item.price;
 
@@ -480,27 +507,11 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
                                     // Add to buyer's pending buys
 
-                                    FirebaseRefs.pendingByUser(currentUserId).child(transactionKey).setValue(true)
-
+                                    FirebaseRefs.pendingByUser(currentUserId).child(transactionKey).setValue(true);
+                                    FirebaseRefs.pendingByUser(item.postedByUID).child(transactionKey).setValue(true);
+                                    FirebaseRefs.itemsByCategory(item.categoryId)
+                                            .child(item.id).removeValue()
                                             .addOnSuccessListener(aVoid2 -> {
-
-                                                // Add to seller's pending sales (need seller's UID)
-
-                                                // Note: item.postedBy should store UID, not email for this to work properly
-
-                                                // For now, assuming you have a way to get seller's UID
-
-                                                // You may need to store sellerUid in the Item model
-
-
-
-                                                // If you stored seller UID in item:
-
-                                                // FirebaseRefs.userPendingSales(item.sellerUid).child(transactionKey).setValue(true)
-
-
-
-                                                // Remove item from category listings
 
                                                 FirebaseRefs.itemsByCategory(categoryId).child(item.id).removeValue()
 
@@ -581,28 +592,43 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         startActivity(i);
     }
     public void onCategoryLong(Category c) {
-        String[] opts = {"Edit", "Delete "};
-        new AlertDialog.Builder(this).setTitle(c.name).setItems(opts,(d, w)->{
-            if (w==0) {
-                editCategory(c);
-            } else {
-                deleteCategory(c);
-            }
-        }).show();
+        var user = FirebaseAuth.getInstance().getCurrentUser();
+        String UID = (user != null ? user.getUid() : null);
+        boolean isOwner = UID != null && UID.equals(c.userid);
+        if (isOwner) {
+            String[] opts = {"Edit", "Delete "};
+            new AlertDialog.Builder(this).setTitle(c.name).setItems(opts, (d, w) -> {
+                if (w == 0) {
+                    editCategory(c);
+                } else {
+                    deleteCategory(c);
+                }
+            }).show();
+        }
     }
 
     @Override
     public void onItemLong(Item item) {
-        String[] opts = {"Edit", "Delete", "Buy"};
-        new AlertDialog.Builder(this).setTitle(item.name).setItems(opts,(d, w)->{
-            if (w==0) {
-                editItem(item);
-            } else if (w==1) {
-                deleteItem(item);
-            } else {
+        var user = FirebaseAuth.getInstance().getCurrentUser();
+        String UID = (user != null ? user.getUid() : null);
+        boolean isOwner = UID != null && UID.equals(item.postedByUID);
+        if (isOwner) {
+            String[] opts = {"Edit", "Delete", "Buy"};
+            new AlertDialog.Builder(this).setTitle(item.name).setItems(opts, (d, w) -> {
+                if (w == 0) {
+                    editItem(item);
+                } else if (w == 1) {
+                    deleteItem(item);
+                } else {
+                    buyItem(item);
+                }
+            }).show();
+        } else {
+            String[] opts = {"Buy"};
+            new AlertDialog.Builder(this).setTitle(item.name).setItems(opts, (d, w) -> {
                 buyItem(item);
-            }
-        }).show();
+            }).show();
+        }
     }
 
     private void toast(String m){ Toast.makeText(this, m, Toast.LENGTH_LONG).show(); }

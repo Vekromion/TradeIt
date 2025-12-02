@@ -79,7 +79,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
             if (t.buyerUserID == null) {
                 otherParty = "No bids yet";
             } else {
-                otherParty = isBuyer ? t.sellerUserID : t.buyerUserID;
+                otherParty = isBuyer ? t.sellerName : t.buyerName;
             }
 
             holder.title.setText(t.itemName);
@@ -118,7 +118,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
         } else {
             Transaction t = completedList.get(position);
             boolean isBuyer = currentUserId.equals(t.buyerUserID);
-            String otherParty = isBuyer ? t.sellerUserID : t.buyerUserID;
+            String otherParty = isBuyer ? t.sellerName : t.buyerName;
 
             holder.title.setText(t.itemName);
 

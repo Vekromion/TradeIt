@@ -474,7 +474,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
                         // Save transaction to main transactions node
 
-                        FirebaseRefs.completedByUser(currentUserId).child(transactionKey).setValue(transaction)
+                        FirebaseRefs.transactions().child(transactionKey).setValue(transaction)
 
                                 .addOnSuccessListener(aVoid -> {
 

@@ -27,6 +27,10 @@ public class FirebaseRefs {
     public static DatabaseReference completedByUser(String userId) {
         return db.getReference("transactions").child("completedByUser").child(userId);
     }
+    public static DatabaseReference transactions() {
+        return db.getReference("transactions").child("all");
+    }
+
     public static DatabaseReference root(){ return db.getReference(); }
 
 }

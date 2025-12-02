@@ -40,6 +40,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
     private List<Category> categories = new ArrayList<>();
     private List<Item> items = new ArrayList<>();
 
+    private String currentCategoryName;
+    public void setCurrentCategoryName(String name) {
+        this.currentCategoryName = name;
+    }
+
     public RecyclerAdapter(Context context, int mode) {
         this.context = context;
         this.mode = mode;
@@ -69,8 +74,12 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
             Category c = categories.get(position);
             holder.title.setText(c.name);
             holder.line2.setText("Items: " + c.itemCount);
-            holder.line3.setText("");
-            holder.line4.setText("");
+            holder.line3.setText("Posted on " + DateFormat.getDateTimeInstance().format(new Date(c.createdAt)));
+            if (c.updatedAt > 0) {
+                holder.line4.setText("Updated on " + DateFormat.getDateTimeInstance().format(new Date(c.updatedAt)));
+            } else {
+                holder.line4.setText("");
+            }
 
             holder.itemView.setOnClickListener(v -> OR.onCategoryClicked(c));
             holder.itemView.setOnLongClickListener(v -> {
@@ -80,9 +89,9 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
         } else {
             Item item = items.get(position);
             holder.title.setText(item.name);
-            holder.line2.setText(item.isFree ? "FREE" :
-                    String.format(Locale.US, "$%.2f", item.price / 100.0));
-            holder.line3.setText(item.description);
+            holder.line2.setText(item.isFree ? "FREE" : String.format(Locale.US, "$%.2f", item.price / 100.0));
+            String categoryName = (currentCategoryName != null ? currentCategoryName : "Unknown");
+            holder.line3.setText("Category: " + categoryName + " | " + item.description);
             String user = (item.postedBy != null ? item.postedBy : "unknown");
             holder.line4.setText("Posted by " + user + " on " + DateFormat.getDateTimeInstance().format(new Date(item.postedAt)));
             holder.itemView.setOnLongClickListener(v -> {

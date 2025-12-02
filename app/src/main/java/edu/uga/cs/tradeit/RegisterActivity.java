@@ -91,9 +91,12 @@ public class RegisterActivity extends AppCompatActivity {
                             // Sets Display Name
                             if (user != null) {
                                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder().setDisplayName(displayName).build();
-                                user.updateProfile(profileUpdates);
+                                user.updateProfile(profileUpdates).addOnCompleteListener(t2 -> {
+                                    if (t2.isSuccessful()) {
+                                        Log.d("Register", "Display Successful");
+                                    }
+                                });
                             }
-
                             Toast.makeText(getApplicationContext(), "Registered user: " + email, Toast.LENGTH_SHORT).show();
 
                             startActivity(new Intent(RegisterActivity.this, ManagementActivity.class));

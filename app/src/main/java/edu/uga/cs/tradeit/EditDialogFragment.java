@@ -17,6 +17,8 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import java.util.Locale;
+
 // This is a DialogFragment to handle edits to a Category or Item.
 // The edits are: updates and deletions of existing Categories or Items.
 public class EditDialogFragment extends DialogFragment {
@@ -94,7 +96,8 @@ public class EditDialogFragment extends DialogFragment {
 
             free.setChecked(newFree);
             if (newPrice != null && !newFree) {
-                price.setText(String.valueOf(newPrice));
+                double dollars = newPrice / 100.0;
+                price.setText(String.format(Locale.US, "%.2f", dollars));
             } else {
                 price.setText(null);
             }
@@ -104,7 +107,6 @@ public class EditDialogFragment extends DialogFragment {
         if (free != null) {
             free.setOnCheckedChangeListener((button, checked) -> {
                 price.setEnabled(!checked);
-
                 if (checked) {
                     price.setText(null);
                 }
@@ -122,15 +124,6 @@ public class EditDialogFragment extends DialogFragment {
         builder.setNegativeButton("Cancel", null);
         // Provide the positive button listener
         builder.setPositiveButton("Save", new EditDialogFragment.SaveListener());
-        /**
-        builder.setNeutralButton("Delete", (d, which) -> {
-            if (categoryMode) {
-                if (editCat != null) editCat.delete();
-            } else {
-                if (editItem != null) editItem.delete();
-            }
-            dismiss();
-        });**/
 
         // Create the AlertDialog and show it
         AlertDialog dialog = builder.create();
@@ -171,6 +164,14 @@ public class EditDialogFragment extends DialogFragment {
                     if (TextUtils.isEmpty(pr)) {
                         isFree = true;
                         priceItem = 0;
+                    } else {
+                        try {
+                            double dollars = Double.parseDouble(pr);
+                            priceItem = (int) Math.round(dollars * 100);
+                        } catch (NumberFormatException e) {
+                            price.setError("Enter a valid price");
+                            return;
+                        }
                     }
                 }
                 if (editItem != null) {

@@ -147,6 +147,14 @@ public class AddDialogFragment extends DialogFragment {
                     if (TextUtils.isEmpty(pr)) {
                         isFree = true;
                         priceItem = 0;
+                    } else {
+                        try {
+                            double price = Double.parseDouble(pr);
+                            priceItem = (int) Math.round(price * 100);
+                        } catch (NumberFormatException e) {
+                            price.setError("Enter a valid price");
+                            return;
+                        }
                     }
                 }
 

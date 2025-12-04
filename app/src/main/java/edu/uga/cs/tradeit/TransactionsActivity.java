@@ -201,6 +201,7 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
     private void showConfirmDialog(Transaction t) {
         String currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
+
         // If buyer is null, waits
         if (t.buyerUserID == null) {
             toast("Waiting for a buyer to place a bid");

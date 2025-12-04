@@ -88,6 +88,7 @@ public class EditDialogFragment extends DialogFragment {
             price.setVisibility(View.GONE);
             free.setVisibility(View.GONE);
         } else {
+            // Item, sets the field visibility and prefills existing values
             description.setVisibility(View.VISIBLE);
             price.setVisibility(View.VISIBLE);
             free.setVisibility(View.VISIBLE);
@@ -120,9 +121,9 @@ public class EditDialogFragment extends DialogFragment {
 
         // Set the title of the AlertDialog
         builder.setTitle(categoryMode ? "Update Category" : "Update Item");
-        // Provide the negative button listener
+        // Add the negative button listener
         builder.setNegativeButton("Cancel", null);
-        // Provide the positive button listener
+        // Add the positive button listener
         builder.setPositiveButton("Save", new EditDialogFragment.SaveListener());
 
         // Create the AlertDialog and show it
@@ -135,7 +136,6 @@ public class EditDialogFragment extends DialogFragment {
 
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(accent);
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(accent);
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(accent);
         });
         return dialog;
     }

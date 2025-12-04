@@ -12,6 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+/**
+ * Sign in dialog fragment for signing in
+ */
 public class UserSignInDialogFragment extends DialogFragment {
     private EditText emailView;
     private EditText passwordView;
@@ -57,6 +60,7 @@ public class UserSignInDialogFragment extends DialogFragment {
                 }
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
+                // Signs in user with firebase
                 com.google.firebase.auth.FirebaseAuth.getInstance()
                         .signInWithEmailAndPassword(email, pass)
                         .addOnSuccessListener(r -> {

@@ -20,6 +20,9 @@ import java.util.Objects;
 
 import edu.uga.cs.tradeit.models.Transaction;
 
+/**
+ * Recyclerview adapter for transactions
+ */
 public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapter.VH> {
 
     public interface OnRowAction {
@@ -39,6 +42,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
         this.OR = (OnRowAction) context;
     }
 
+    // Updates pending list
     public void submitPending(List<Transaction> list) {
         pendingList = list;
         if (mode == TransactionsActivity.MODE_PENDING) {
@@ -46,6 +50,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
         }
     }
 
+    // Updates completed list
     public void submitCompleted(List<Transaction> list) {
         completedList = list;
         if (mode == TransactionsActivity.MODE_COMPLETED) {
@@ -53,6 +58,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
         }
     }
 
+    // Switches adapter mode
     public void setMode(int mode) {
         this.mode = mode;
         notifyDataSetChanged();
@@ -74,7 +80,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
             boolean isBuyer = currentUserId.equals(t.buyerUserID);
             boolean isSeller = currentUserId.equals(t.sellerUserID);
 
-            // CHANGE 6: Handle case where buyer hasn't bid yet
+            // Determines seller and buyer
             String otherParty;
             if (t.buyerUserID == null) {
                 otherParty = "No bids yet";
@@ -88,7 +94,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
                     String.format(Locale.US, "$%.2f", t.itemPrice / 100.0);
             holder.line2.setText(priceStr);
 
-            // CHANGE 6: Show appropriate role message
+            // Shows correct role message
             String role;
             if (t.buyerUserID == null) {
                 role = "Waiting for buyer: ";
@@ -116,6 +122,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
 
             holder.itemView.setOnClickListener(v -> OR.onTransactionClicked(t));
         } else {
+            // Completed transaction list
             Transaction t = completedList.get(position);
             boolean isBuyer = currentUserId.equals(t.buyerUserID);
             String otherParty = isBuyer ? t.sellerName : t.buyerName;
@@ -132,7 +139,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
             String dateStr = DateFormat.getDateTimeInstance().format(new Date(t.completedAt));
             holder.line4.setText("Completed on " + dateStr);
 
-            holder.itemView.setOnClickListener(null); // No click for completed
+            holder.itemView.setOnClickListener(null);
         }
     }
 
@@ -141,6 +148,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
         return mode == TransactionsActivity.MODE_PENDING ? pendingList.size() : completedList.size();
     }
 
+    // Viewholder for transactions
     static class VH extends RecyclerView.ViewHolder {
         TextView title, line2, line3, line4;
         VH(@NonNull View v) {

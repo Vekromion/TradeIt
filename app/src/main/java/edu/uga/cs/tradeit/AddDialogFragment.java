@@ -111,6 +111,7 @@ public class AddDialogFragment extends DialogFragment {
 
             if (btnPositive != null) {
                 btnPositive.setTextColor(accent);
+                // Overrides button dismiss on click so validation can happen
                 btnPositive.setOnClickListener(v ->
                         new SaveListener().onClick(dialog, AlertDialog.BUTTON_POSITIVE)
                 );

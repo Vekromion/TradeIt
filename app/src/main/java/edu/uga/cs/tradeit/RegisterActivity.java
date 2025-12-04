@@ -26,6 +26,9 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
+/**
+ * Activity that allows for new users to register
+ */
 public class RegisterActivity extends AppCompatActivity {
 
     private TextView textView;
@@ -57,6 +60,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         textView.setText("Register");
     }
+    // Deals with when the register button is clicked
     private class RegisterButtonClickListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
@@ -65,14 +69,17 @@ public class RegisterActivity extends AppCompatActivity {
             final String displayName = usernameView.getText().toString().trim();
 
             boolean ok = true;
+            // Requires displayname / username
             if (TextUtils.isEmpty(displayName)) {
                 usernameView.setError("Display name required");
                 ok = false;
             }
+            // Validates correct email format
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 emailView.setError("Enter a valid email");
                 ok = false;
             }
+            // Requires a password
             if (TextUtils.isEmpty(password)) {
                 passwordView.setError("Password required");
                 ok = false;
@@ -80,7 +87,7 @@ public class RegisterActivity extends AppCompatActivity {
             if (!ok) {
                 return;
             }
-
+            // firebase user creation
             firebaseAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(RegisterActivity.this, (Task<AuthResult> task) -> {
                         if (task.isSuccessful()) {
@@ -99,6 +106,7 @@ public class RegisterActivity extends AppCompatActivity {
                             }
                             Toast.makeText(getApplicationContext(), "Registered user: " + email, Toast.LENGTH_SHORT).show();
 
+                            // Moves to main screen
                             startActivity(new Intent(RegisterActivity.this, ManagementActivity.class));
                             finish();
                         } else {

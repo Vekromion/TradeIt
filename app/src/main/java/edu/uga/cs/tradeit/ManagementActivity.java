@@ -19,6 +19,9 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+/**
+ * Main screen after sign in, shows categories and transactions
+ */
 public class ManagementActivity extends AppCompatActivity {
     private TextView textView;
     private FirebaseAuth auth;

@@ -30,12 +30,14 @@ import java.util.Objects;
 import edu.uga.cs.tradeit.data.FirebaseRefs;
 import edu.uga.cs.tradeit.models.Transaction;
 
+/**
+ * Displays transactions, split into pending and complete
+ */
 public class TransactionsActivity extends AppCompatActivity implements TransactionsAdapter.OnRowAction {
 
+    // Tab index for pending and compelted
     public static final int MODE_PENDING = 0;
     public static final int MODE_COMPLETED = 1;
-
-    private static final boolean DEMO_MODE = false;
 
     private int mode;
     private RecyclerView recyclerView;
@@ -65,7 +67,7 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        mode = MODE_PENDING; // Start with pending
+        mode = MODE_PENDING;
 
         adapter = new TransactionsAdapter(this, mode);
         recyclerView.setAdapter(adapter);
@@ -76,11 +78,11 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
         tabLayout.selectTab(tabLayout.getTabAt(0));
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            // Changes tab position
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                mode = tab.getPosition(); // 0 = Pending, 1 = Completed
+                mode = tab.getPosition();
                 adapter.setMode(mode);
-                // CHANGE 1: Don't clear data when switching - just change display mode
             }
 
             @Override
@@ -89,48 +91,12 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
             @Override
             public void onTabReselected(TabLayout.Tab tab) {}
         });
-
-        // Temporary Fake Data
-        if (DEMO_MODE) {
-            if (mode == MODE_PENDING) {
-                List<Transaction> fakePending = new ArrayList<>();
-                Transaction t = new Transaction();
-                t.id = "testTx1";
-                t.itemName = "Test Item";
-                t.buyerUserID = "buyer123";
-                t.sellerUserID = "seller456";
-                t.itemPrice = 999;
-                t.itemIsFree = false;
-                t.buyerConfirmed = false;
-                t.sellerConfirmed = false;
-                t.createdAt = System.currentTimeMillis();
-                fakePending.add(t);
-                adapter.submitPending(fakePending);
-            } else {
-                List<Transaction> fakeCompleted = new ArrayList<>();
-                Transaction t = new Transaction();
-                t.id = "testTx2";
-                t.itemName = "Completed Item";
-                t.buyerUserID = "buyer123";
-                t.sellerUserID = "seller456";
-                t.itemPrice = 1500;
-                t.itemIsFree = false;
-                t.status = "completed";
-                t.completedAt = System.currentTimeMillis();
-                fakeCompleted.add(t);
-                adapter.submitCompleted(fakeCompleted);
-            }
-        }
     }
 
     // Connects Page to Firebase
     @Override
     protected void onStart() {
         super.onStart();
-        // Demo Mode avoids starting up firebase listeners
-        if (DEMO_MODE) {
-            return;
-        }
 
         String currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
@@ -161,14 +127,13 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
                 }
                 loadTransactionDetails(txIds, false);
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError e) {
                 toast("Error loading completed transactions");
             }
         });
     }
-
+    // Given the ids, load teh details
     private void loadTransactionDetails(List<String> txIds, boolean isPending) {
         if (txIds.isEmpty()) {
             if (isPending) {
@@ -193,8 +158,8 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
                     count[0]++;
 
                     if (count[0] == txIds.size()) {
-                        // Sort by date (most recent first)
 
+                        // Sort by date, most recent first
                         if (isPending) {
                             adapter.submitPending(tempList);
                         } else {
@@ -211,6 +176,7 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
         }
     }
 
+    // Detaches firebase listener when no longer active
     @Override
     protected void onStop() {
         super.onStop();
@@ -235,7 +201,7 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
     private void showConfirmDialog(Transaction t) {
         String currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
-        // CHANGE 7: Handle case where no buyer yet
+        // If buyer is null, waits
         if (t.buyerUserID == null) {
             toast("Waiting for a buyer to place a bid");
             return;
@@ -273,7 +239,7 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
                             Transaction updated = snapshot.getValue(Transaction.class);
                             if (updated != null && updated.buyerConfirmed && updated.sellerConfirmed) {
-                                // CHANGE 2: Complete the transaction AND remove item from listings
+                                // Mark as completed and att completion time
                                 updated.status = "completed";
                                 updated.completedAt = System.currentTimeMillis();
 
@@ -287,7 +253,7 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
                                             FirebaseRefs.pendingByUser(updated.buyerUserID).child(t.id).removeValue();
                                             FirebaseRefs.pendingByUser(updated.sellerUserID).child(t.id).removeValue();
 
-                                            // CHANGE 2: Remove item from category listings when both accept
+                                            // Remove item from category list
                                             FirebaseRefs.itemsByCategory(updated.categoryID).child(updated.itemId).removeValue()
                                                     .addOnSuccessListener(aVoid3 -> {
                                                         // Decrement category item count

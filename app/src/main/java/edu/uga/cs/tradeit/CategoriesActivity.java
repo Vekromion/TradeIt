@@ -36,6 +36,9 @@ import edu.uga.cs.tradeit.models.Category;
 import edu.uga.cs.tradeit.models.Item;
 import edu.uga.cs.tradeit.models.Transaction;
 
+/**
+ * Contains categories, items, and their interactions
+ */
 public class CategoriesActivity extends AppCompatActivity implements RecyclerAdapter.OnRowAction {
 
     public static final String EXTRA_MODE = "mode" ;
@@ -43,8 +46,6 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
     public static final String EXTRA_CATEGORY_NAME = "categoryName";
     public static final int MODE_CATEGORIES = 0;
     public static final int MODE_ITEMS = 1;
-
-    private static final boolean DEMO_MODE = false;
 
     private int mode;
     private String categoryId, categoryName;
@@ -91,51 +92,13 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
             if (mode==MODE_CATEGORIES) showAddCategory();
             else showAddItem();
         });
-        // Temporary Fake Data
-        if (DEMO_MODE) {
-            if (mode == MODE_CATEGORIES) {
-                // --- Test Category ---
-                List<Category> fake = new ArrayList<>();
-                Category c = new Category();
-                Category d = new Category();
-                c.id = "testCat";
-                c.name = "Test Category";
-                c.itemCount = 1;
-                d.id = "testCat2";
-                d.name = "U Test Category";
-                d.itemCount = 0;
-                fake.add(c);
-                fake.add(d);
-                adapter.submitCategories(fake);
-            } else {
-                // --- Test Item in this category ---
-                List<Item> fakeItems = new ArrayList<>();
-
-                if ("testCat".equals(categoryId)) {
-                    Item it = new Item();
-                    it.id = "testItem1";
-                    it.categoryId = categoryId;
-                    it.name = "Test Item";
-                    it.description = "This is a test item";
-                    it.isFree = false;
-                    it.price = 999;
-                    it.postedAt = System.currentTimeMillis();
-                    it.postedBy = "demo@uga.edu";
-
-                    fakeItems.add(it);
-                }
-                adapter.submitItems(fakeItems);
-            }
-        }
     }
     // Connects Page to Firebase
     @Override protected void onStart() {
         super.onStart();
-        // Demo Mode avoids starting up firebase listeners
-        if (DEMO_MODE) {
-            return;
-        }
+        // Deals with the thing to be displayed
         if (mode == MODE_CATEGORIES) {
+            // Display categories
             catListener = FirebaseRefs.categories().addValueEventListener(new ValueEventListener() {
                 @Override public void onDataChange(@NonNull DataSnapshot snap) {
                     List<Category> list = new ArrayList<>();
@@ -153,6 +116,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
                 public void onCancelled(@NonNull DatabaseError e) {}
             });
         } else {
+            // Displays items
             itemListener = FirebaseRefs.itemsByCategory(categoryId).addValueEventListener(new ValueEventListener() {
                 @Override public void onDataChange(@NonNull DataSnapshot snap) {
                     List<Item> list = new ArrayList<>();
@@ -162,7 +126,6 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
                             list.add(item);
                         }
                     }
-                    // Story 11A
                     list.sort((a,b) -> Long.compare(b.postedAt, a.postedAt));
                     adapter.submitItems(list);
                 }
@@ -211,10 +174,17 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         }
         EditDialogFragment.editCategory(c.name, (newName) -> {
             String trim = newName == null ? "" : newName.trim();
-            FirebaseRefs.categories().child(c.id).child("name").setValue(trim);
+            long now = System.currentTimeMillis();
+
+            HashMap<String,Object> updates = new HashMap<>();
+            updates.put("name", trim);
+            updates.put("updatedAt", now);
+
+            FirebaseRefs.categories().child(c.id).updateChildren(updates);
             c.name = trim;
-            c.updatedAt = System.currentTimeMillis();
+            c.updatedAt = now;
         }).show(getSupportFragmentManager(),"editCategory");
+
     }
     private void deleteCategory(Category c) {
         if (c.itemCount > 0) {
@@ -342,7 +312,6 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
             updates.put("name", name);
             updates.put("description", description);
             updates.put("isFree", isFree);
-            updates.put("price", price);
             updates.put("price", isFree ? null : price);
             FirebaseRefs.itemsByCategory(item.categoryId).child(item.id).updateChildren(updates);
             FirebaseRefs.itemsByOwner(item.postedBy).child(item.id).updateChildren(updates);
@@ -415,7 +384,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
                 .show();
 
     }
-    // User Story 12
+    // Buy item
     private void buyItem(Item item) {
 
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null
@@ -428,8 +397,6 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         String currentUserName = FirebaseAuth.getInstance().getCurrentUser() != null
 
                 ? FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : null;
-
-
 
         if (currentUserId == null) {
 
@@ -444,15 +411,11 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
             return;
         }
 
-
-
         String message = item.isFree
 
                 ? "Do you want to accept this free item?"
 
                 : "Do you want to purchase this item for $" + String.format("%.2f", item.price / 100.0) + "?";
-
-
 
         new AlertDialog.Builder(this)
 
@@ -496,8 +459,6 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
                         transaction.buyerConfirmed = true;
 
                         transaction.sellerConfirmed = false;
-
-
 
                         // Save transaction to main transactions node
 
@@ -583,6 +544,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
 
     }
 
+    // Deals with opening categories
     public void onCategoryClicked(Category c) {
         // open items screen for this category
         Intent i = new Intent(this, CategoriesActivity.class);
@@ -591,6 +553,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         i.putExtra(EXTRA_CATEGORY_NAME, c.name);
         startActivity(i);
     }
+    // Deals with editing and deleting categories
     public void onCategoryLong(Category c) {
         var user = FirebaseAuth.getInstance().getCurrentUser();
         String UID = (user != null ? user.getUid() : null);
@@ -607,6 +570,7 @@ public class CategoriesActivity extends AppCompatActivity implements RecyclerAda
         }
     }
 
+    // Deals with item interactions
     @Override
     public void onItemLong(Item item) {
         var user = FirebaseAuth.getInstance().getCurrentUser();

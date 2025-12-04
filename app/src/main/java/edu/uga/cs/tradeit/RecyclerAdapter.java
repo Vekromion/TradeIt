@@ -24,8 +24,12 @@ import java.util.Locale;
 import edu.uga.cs.tradeit.models.Category;
 import edu.uga.cs.tradeit.models.Item;
 
+/**
+ * Used for displaying categories and items inside said categories.
+ */
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
 
+    // Callbacks allow for click and long press
     public interface OnRowAction {
         void onCategoryClicked(Category c);
         void onCategoryLong(Category c);
@@ -51,11 +55,13 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
         this.OR = (OnRowAction) context;
     }
 
+    // Updates categories
     public void submitCategories(List<Category> list) {
         categories = list;
         notifyDataSetChanged();
     }
 
+    // Updates items
     public void submitItems(List<Item> list) {
         items = list;
         notifyDataSetChanged();
@@ -70,6 +76,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerAdapter.VH holder, int position) {
+        // Shows categories
         if (mode == CategoriesActivity.MODE_CATEGORIES) {
             Category c = categories.get(position);
             holder.title.setText(c.name);
@@ -87,6 +94,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
                 return true;
             });
         } else {
+            // Shows items
             Item item = items.get(position);
             holder.title.setText(item.name);
             holder.line2.setText(item.isFree ? "FREE" : String.format(Locale.US, "$%.2f", item.price / 100.0));
@@ -101,7 +109,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.VH> {
         }
     }
 
-    @Override public int getItemCount() { return mode==CategoriesActivity.MODE_CATEGORIES ? categories.size() : items.size(); }
+    @Override public int getItemCount()
+    {
+        return mode==CategoriesActivity.MODE_CATEGORIES ? categories.size() : items.size();
+    }
+    // View holder for the rows
     static class VH extends RecyclerView.ViewHolder {
         TextView title, line2, line3, line4;
         VH(@NonNull View v) {

@@ -74,7 +74,6 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
             boolean isBuyer = currentUserId.equals(t.buyerUserID);
             boolean isSeller = currentUserId.equals(t.sellerUserID);
 
-            // CHANGE 6: Handle case where buyer hasn't bid yet
             String otherParty;
             if (t.buyerUserID == null) {
                 otherParty = "No bids yet";
@@ -88,7 +87,6 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
                     String.format(Locale.US, "$%.2f", t.itemPrice / 100.0);
             holder.line2.setText(priceStr);
 
-            // CHANGE 6: Show appropriate role message
             String role;
             if (t.buyerUserID == null) {
                 role = "Waiting for buyer: ";

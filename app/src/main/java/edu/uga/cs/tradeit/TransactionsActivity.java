@@ -80,7 +80,6 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
             public void onTabSelected(TabLayout.Tab tab) {
                 mode = tab.getPosition(); // 0 = Pending, 1 = Completed
                 adapter.setMode(mode);
-                // CHANGE 1: Don't clear data when switching - just change display mode
             }
 
             @Override
@@ -235,7 +234,6 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
     private void showConfirmDialog(Transaction t) {
         String currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
 
-        // CHANGE 7: Handle case where no buyer yet
         if (t.buyerUserID == null) {
             toast("Waiting for a buyer to place a bid");
             return;
@@ -273,7 +271,6 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
                             Transaction updated = snapshot.getValue(Transaction.class);
                             if (updated != null && updated.buyerConfirmed && updated.sellerConfirmed) {
-                                // CHANGE 2: Complete the transaction AND remove item from listings
                                 updated.status = "completed";
                                 updated.completedAt = System.currentTimeMillis();
 
@@ -287,7 +284,6 @@ public class TransactionsActivity extends AppCompatActivity implements Transacti
                                             FirebaseRefs.pendingByUser(updated.buyerUserID).child(t.id).removeValue();
                                             FirebaseRefs.pendingByUser(updated.sellerUserID).child(t.id).removeValue();
 
-                                            // CHANGE 2: Remove item from category listings when both accept
                                             FirebaseRefs.itemsByCategory(updated.categoryID).child(updated.itemId).removeValue()
                                                     .addOnSuccessListener(aVoid3 -> {
                                                         // Decrement category item count

@@ -1,3 +1,4 @@
+A simple marketplace-style Android app powered by Firebase, featuring real-time data handling and dynamic UI updates.
 # TradeIt – Firebase Marketplace App
 
 TradeIt is an Android application that allows users to browse categories and items in a simple marketplace-style interface. The app integrates with Firebase Realtime Database to dynamically load and display content.
@@ -35,3 +36,5 @@ Completed as part of coursework, with additional refinement and improvements.
 - Image uploads and richer item details
 - Improved UI/UX design
 - Push notifications for updates
+## Screenshots
+
